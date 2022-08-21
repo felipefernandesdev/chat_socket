@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.0-beta1/css/bootstrap.min.css" integrity="sha512-o/MhoRPVLExxZjCFVBsm17Pkztkzmh7Dp8k7/3JrtNCHh0AQ489kwpfA3dPSHzKDe8YCuEhxXq3Y71eb/o6amg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <title>Chat Online</title>
+</head>
+<style>
+  #chat {
+    max-height: 400px;
+    min-height: 400px;
+    background-color: aliceblue;
+    overflow-y: scroll;
+  }
+</style>
+<body>
+  <h4 >Chat Online</h4>
+  <p id="logo"></p>
+  <div class="container">
+  <div class="chat" id="chat">
+  </div>
+  <!-- <figure class="text-center">
+    <blockquote class="blockquote" id="chat">
+
+    </blockquote>
+    </figure> -->
+
+  <hr class="hr" />
+
+  <input type="text" name="" id="msg" class="form-control m-2" placeholder="msg...">
+  <!-- <button onclick="enviar()" class="btn btn-primary btn-lg m-2">Enviar</button> -->
+</div>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.5/dayjs.min.js" integrity="sha512-Ot7ArUEhJDU0cwoBNNnWe487kjL5wAOsIYig8llY/l0P2TUFwgsAHVmrZMHsT8NGo+HwkjTJsNErS6QqIkBxDw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.0-beta1/js/bootstrap.min.js" integrity="sha512-Hqe3s+yLpqaBbXM6VA0cnj/T56ii5YjNrMT9v+us11Q81L0wzUG0jEMNECtugqNu2Uq5MSttCg0p4KK0kCPVaQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.socket.io/4.5.0/socket.io.min.js" integrity="sha384-7EyYLQZgWBi67fBtVxw60/OWl1kjsfrPFcaU0pp0nAh+i8FD068QogUvg85Ewy1k" crossorigin="anonymous"></script>
+<script>
+  const socket = io();
+  const urlSearch = new URLSearchParams(window.location.search);
+  const username = urlSearch.get('username');
+  const room = urlSearch.get('select_room');
+  const logo = document.querySelector('#logo')
+  logo.innerHTML = `Bem vindo(a): <strong>${username}</strong> (sala: <strong> ${room} </strong>) | <a href="#" id="logout">Logout</a>`
+
+  socket.emit('select_room', {
+    username,
+    room
+  }, response=>{
+    response.forEach(message=>createMessage(message))
+  });
+
+  document.querySelector("#msg").addEventListener("keypress", event => {
+    if(event.key === 'Enter'){
+      const message = event.target.value;
+
+      const data = {
+        room,
+        username,
+        message
+      }
+
+      socket.emit('message', data)
+
+      event.target.value = "";
+    }
+  })
+  socket.on('message', data=>{
+    createMessage(data)
+  })
+
+  function createMessage(data){
+    var chat = document.querySelector("#chat")
+    var p = document.createElement("p")
+    p.innerHTML = `
+    ${dayjs(data.createdAt).format("DD/MM HH:mm")} | <strong class="text-danger">${data.username}</strong> -> <strong class="text-primary">${data.text}</strong>
+    `;
+    //p.classList.add("lead")
+    chat.append(p)
+  }
+
+  document.querySelector('#logout').addEventListener('click', e=>{
+    e.preventDefault();
+    window.location.href = "/"
+  })
+
+</script>
+</html>
